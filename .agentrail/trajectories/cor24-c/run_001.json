@@ -1,0 +1,11 @@
+{
+  "task_type": "cor24-c",
+  "state": {
+    "number": 1,
+    "step": "pascal-subset-spec"
+  },
+  "action": "read docs/research.txt, docs/c-and-pascal-implementation.md, pv24a/docs/design.md; synthesized grammar from research recommendations; mapped each Pascal construct to specific .spc opcodes; designed symbol table for tc24r C constraints (fixed arrays, no malloc needed); wrote complete example with .spc output",
+  "result": "success",
+  "reward": 1,
+  "timestamp": "2026-03-25T23:32:24"
+}

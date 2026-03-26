@@ -1,8 +1,9 @@
 number = 1
 slug = "pascal-subset-spec"
-status = "pending"
+status = "completed"
 description = "Define the Phase 0 Pascal subset grammar and .spc emission spec. Create docs/..."
 role = "production"
 context_files = []
 created_at = "2026-03-25T23:19:39"
+completed_at = "2026-03-25T23:32:24"
 task_type = "cor24-c"
