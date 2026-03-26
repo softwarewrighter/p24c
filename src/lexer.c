@@ -86,6 +86,24 @@ int lex_keyword(char *id) {
     if (strcmp(id, "and") == 0) return TOK_AND;
     if (strcmp(id, "or") == 0) return TOK_OR;
     if (strcmp(id, "not") == 0) return TOK_NOT;
+    /* Phase 1 keywords */
+    if (strcmp(id, "procedure") == 0) return TOK_PROCEDURE;
+    if (strcmp(id, "function") == 0) return TOK_FUNCTION;
+    if (strcmp(id, "forward") == 0) return TOK_FORWARD;
+    if (strcmp(id, "type") == 0) return TOK_TYPE;
+    if (strcmp(id, "array") == 0) return TOK_ARRAY;
+    if (strcmp(id, "of") == 0) return TOK_OF;
+    if (strcmp(id, "record") == 0) return TOK_RECORD;
+    if (strcmp(id, "char") == 0) return TOK_CHAR_KW;
+    if (strcmp(id, "for") == 0) return TOK_FOR;
+    if (strcmp(id, "to") == 0) return TOK_TO;
+    if (strcmp(id, "downto") == 0) return TOK_DOWNTO;
+    if (strcmp(id, "repeat") == 0) return TOK_REPEAT;
+    if (strcmp(id, "until") == 0) return TOK_UNTIL;
+    if (strcmp(id, "case") == 0) return TOK_CASE;
+    if (strcmp(id, "write") == 0) return TOK_WRITE;
+    if (strcmp(id, "read") == 0) return TOK_READ;
+    if (strcmp(id, "readln") == 0) return TOK_READLN;
     return TOK_IDENT;
 }
 
@@ -100,6 +118,8 @@ void lexer_init(char *src, int len) {
     tok_line = 1;
     tok_int_val = 0;
     tok_lexeme[0] = 0;
+    tok_str_val[0] = 0;
+    tok_str_len = 0;
 }
 
 int next_token(void) {
@@ -148,6 +168,40 @@ int next_token(void) {
         tok_lexeme[i] = 0;
         tok_type = TOK_INT_LIT;
         return TOK_INT_LIT;
+    }
+
+    /* String and char literals: 'x' is char, 'abc' is string */
+    if (c == 39) {
+        int si;
+        lex_advance(); /* skip opening quote */
+        si = 0;
+        while (lex_pos < lex_len && lex_src[lex_pos] != 39) {
+            if (si < MAX_STRING - 1) {
+                tok_str_val[si] = lex_src[lex_pos];
+                si = si + 1;
+            }
+            lex_pos = lex_pos + 1;
+        }
+        tok_str_val[si] = 0;
+        tok_str_len = si;
+        if (lex_pos < lex_len) lex_advance(); /* skip closing quote */
+        if (si == 1) {
+            /* char literal */
+            tok_int_val = tok_str_val[0];
+            tok_lexeme[0] = tok_str_val[0];
+            tok_lexeme[1] = 0;
+            tok_type = TOK_CHAR_LIT;
+            return TOK_CHAR_LIT;
+        }
+        /* string literal */
+        i = 0;
+        while (i < si && i < MAX_LEXEME - 1) {
+            tok_lexeme[i] = tok_str_val[i];
+            i = i + 1;
+        }
+        tok_lexeme[i] = 0;
+        tok_type = TOK_STR_LIT;
+        return TOK_STR_LIT;
     }
 
     /* Symbols — consume first char */
@@ -204,7 +258,20 @@ int next_token(void) {
         return TOK_GT;
     }
     if (c == ';') { tok_lexeme[0] = ';'; tok_lexeme[1] = 0; tok_type = TOK_SEMI; return TOK_SEMI; }
-    if (c == '.') { tok_lexeme[0] = '.'; tok_lexeme[1] = 0; tok_type = TOK_DOT; return TOK_DOT; }
+    if (c == '.') {
+        if (lex_pos < lex_len && lex_src[lex_pos] == '.') {
+            lex_advance();
+            tok_lexeme[0] = '.';
+            tok_lexeme[1] = '.';
+            tok_lexeme[2] = 0;
+            tok_type = TOK_DOTDOT;
+            return TOK_DOTDOT;
+        }
+        tok_lexeme[0] = '.';
+        tok_lexeme[1] = 0;
+        tok_type = TOK_DOT;
+        return TOK_DOT;
+    }
     if (c == ',') { tok_lexeme[0] = ','; tok_lexeme[1] = 0; tok_type = TOK_COMMA; return TOK_COMMA; }
     if (c == '(') { tok_lexeme[0] = '('; tok_lexeme[1] = 0; tok_type = TOK_LPAREN; return TOK_LPAREN; }
     if (c == ')') { tok_lexeme[0] = ')'; tok_lexeme[1] = 0; tok_type = TOK_RPAREN; return TOK_RPAREN; }
@@ -212,6 +279,8 @@ int next_token(void) {
     if (c == '-') { tok_lexeme[0] = '-'; tok_lexeme[1] = 0; tok_type = TOK_MINUS; return TOK_MINUS; }
     if (c == '*') { tok_lexeme[0] = '*'; tok_lexeme[1] = 0; tok_type = TOK_STAR; return TOK_STAR; }
     if (c == '=') { tok_lexeme[0] = '='; tok_lexeme[1] = 0; tok_type = TOK_EQ; return TOK_EQ; }
+    if (c == '[') { tok_lexeme[0] = '['; tok_lexeme[1] = 0; tok_type = TOK_LBRACKET; return TOK_LBRACKET; }
+    if (c == ']') { tok_lexeme[0] = ']'; tok_lexeme[1] = 0; tok_type = TOK_RBRACKET; return TOK_RBRACKET; }
 
     /* Unknown character */
     tok_lexeme[0] = c;
@@ -259,6 +328,28 @@ char *token_name(int type) {
     if (type == TOK_COLON) return "COLON";
     if (type == TOK_IDENT) return "IDENT";
     if (type == TOK_INT_LIT) return "INT";
+    if (type == TOK_PROCEDURE) return "PROCEDURE";
+    if (type == TOK_FUNCTION) return "FUNCTION";
+    if (type == TOK_FORWARD) return "FORWARD";
+    if (type == TOK_TYPE) return "TYPE";
+    if (type == TOK_ARRAY) return "ARRAY";
+    if (type == TOK_OF) return "OF";
+    if (type == TOK_RECORD) return "RECORD";
+    if (type == TOK_CHAR_KW) return "CHAR";
+    if (type == TOK_FOR) return "FOR";
+    if (type == TOK_TO) return "TO";
+    if (type == TOK_DOWNTO) return "DOWNTO";
+    if (type == TOK_REPEAT) return "REPEAT";
+    if (type == TOK_UNTIL) return "UNTIL";
+    if (type == TOK_CASE) return "CASE";
+    if (type == TOK_WRITE) return "WRITE";
+    if (type == TOK_READ) return "READ";
+    if (type == TOK_READLN) return "READLN";
+    if (type == TOK_LBRACKET) return "LBRACKET";
+    if (type == TOK_RBRACKET) return "RBRACKET";
+    if (type == TOK_DOTDOT) return "DOTDOT";
+    if (type == TOK_CHAR_LIT) return "CHAR_LIT";
+    if (type == TOK_STR_LIT) return "STR_LIT";
     if (type == TOK_EOF) return "EOF";
     return "ERROR";
 }

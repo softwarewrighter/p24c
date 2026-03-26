@@ -31,5 +31,10 @@ build-codegen:
 test-pipeline:
     bash tests/run_pipeline.sh
 
+# Compile and run Phase 1 lexer test
+test-lexer-phase1:
+    tc24r tests/test_lexer_phase1.c -o tests/test_lexer_phase1.s -I {{tc24r_include}} -I src
+    cor24-run --run tests/test_lexer_phase1.s --speed 0 --time 30
+
 # Run all tests
-test: test-lexer test-parser test-codegen
+test: test-lexer test-parser test-codegen test-lexer-phase1
