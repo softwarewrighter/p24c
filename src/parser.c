@@ -564,11 +564,18 @@ void parse_program(void) {
     expect(TOK_SEMI);
     if (parse_error) return;
 
+    printf(".module %s\n", prog_name);
+    printf(".extern _p24p_write_int\n");
+    printf(".extern _p24p_write_bool\n");
+    printf(".extern _p24p_write_ln\n");
+    printf(".export main\n");
     printf("; p24p output: %s\n", prog_name);
 
     parse_block();
 
     expect(TOK_DOT);
+
+    printf(".endmodule\n");
 
     if (parse_error) {
         printf("; compilation failed\n");

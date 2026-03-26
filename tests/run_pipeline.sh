@@ -31,6 +31,11 @@ check() {
     fi
 }
 
+check ".module countdown"
+check ".extern _p24p_write_int"
+check ".extern _p24p_write_ln"
+check ".export main"
+check ".endmodule"
 check ".global n 1"
 check ".global done 1"
 check ".proc main 0"

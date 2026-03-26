@@ -86,3 +86,13 @@ cor24-run --run <file.s> -u 'input\n' --speed 0 -n 5000000
 ## P-Code Target
 
 The compiler emits `.spc` files — p-code assembler source for pasm. See pv24a `docs/design.md` for the p-code instruction set (opcodes, encoding, stack effects).
+
+## Cross-Agent Wiki
+
+This project coordinates with other COR24 toolchain agents via a shared wiki. See `docs/agent-cas-wiki.md` for the API reference and CAS protocol. Key pages: [[P24P]], [[P24Toolchain]], [[AgentToAgentRequests]], [[AgentStatus]].
+
+```bash
+# Quick wiki access
+curl -s http://localhost:7402/api/pages          # list pages
+curl -s http://localhost:7402/api/pages/P24P      # read a page
+```
