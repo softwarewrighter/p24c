@@ -36,5 +36,13 @@ test-lexer-phase1:
     tc24r tests/test_lexer_phase1.c -o tests/test_lexer_phase1.s -I {{tc24r_include}} -I src
     cor24-run --run tests/test_lexer_phase1.s --speed 0 --time 30
 
+# Build p24p compiler (UART-input mode)
+build:
+    tc24r src/main.c -o p24p.s -I {{tc24r_include}} -I src
+
+# Run p24p compiler with a Pascal file via UART
+run file:
+    printf '%s\x04' "$(cat {{file}})" | cor24-run --run p24p.s --terminal --speed 0 --time 30
+
 # Run all tests
 test: test-lexer test-parser test-codegen test-lexer-phase1
