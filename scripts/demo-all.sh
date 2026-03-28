@@ -19,3 +19,9 @@ for f in "$P24P_DIR"/tests/t*.pas "$P24P_DIR"/tests/hello_str.pas; do
   echo ""
   echo ""
 done
+
+# LED demos (separate script — checks I/O dump, not UART output)
+echo ""
+echo "========== LED DEMOS =========="
+echo ""
+"$SCRIPT_DIR/demo-led.sh"

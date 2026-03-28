@@ -58,3 +58,7 @@ demo file:
 # Demo all Pascal programs
 demo-all:
     bash scripts/demo-all.sh
+
+# Demo LED on/off programs (checks I/O dump)
+demo-led:
+    bash scripts/demo-led.sh
