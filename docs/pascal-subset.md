@@ -3,7 +3,9 @@
 ## 1. BNF Grammar
 
 ```bnf
-program         = "program" IDENT ";" block "." .
+program         = "program" IDENT ";" [ uses-clause ] block "." .
+
+uses-clause     = "uses" IDENT { "," IDENT } ";" .
 
 block           = [ const-section ] [ var-section ] compound-stmt .
 
@@ -19,6 +21,7 @@ type-id         = "integer" | "boolean" .
 compound-stmt   = "begin" stmt { ";" stmt } "end" .
 
 stmt            = [ assignment
+                  | proc-call
                   | if-stmt
                   | while-stmt
                   | for-stmt
@@ -27,6 +30,7 @@ stmt            = [ assignment
                   | compound-stmt ] .
 
 assignment      = IDENT ":=" expression .
+proc-call       = IDENT [ "(" expr-list ")" ] .
 
 if-stmt         = "if" expression "then" stmt [ "else" stmt ] .
 

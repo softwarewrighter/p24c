@@ -69,6 +69,7 @@
 #define TOK_INT_LIT    37
 #define TOK_CHAR_LIT   60
 #define TOK_STR_LIT    61
+#define TOK_USES       62
 /* Special */
 #define TOK_EOF        38
 #define TOK_ERROR      39

@@ -4,6 +4,7 @@
 /* Forward declarations for recursive descent */
 int parse_expression(void);
 void parse_stmt(void);
+void parse_proc_call(char *name);
 
 /* --- String helpers --- */
 
@@ -64,6 +65,70 @@ char *str_data_at(int i) {
     off = i * MAX_STRING_BYTES;
     return &str_data[off];
 }
+
+/* --- Procedure table --- */
+
+char *proc_pascal_at(int i) {
+    int off;
+    off = i * MAX_NAME;
+    return &proc_pascal[off];
+}
+
+char *proc_extern_at(int i) {
+    int off;
+    off = i * MAX_NAME;
+    return &proc_extern[off];
+}
+
+int proc_lookup(char *name) {
+    int i;
+    i = 0;
+    while (i < proc_count) {
+        if (strcmp(proc_pascal_at(i), name) == 0) return i;
+        i = i + 1;
+    }
+    return -1;
+}
+
+int proc_add(char *pascal_name, char *extern_name, int argc, int has_ret, int ret_type) {
+    int idx;
+    if (proc_count >= MAX_PROCS) {
+        error("too many procedures");
+        return -1;
+    }
+    idx = proc_count;
+    str_copy(proc_pascal_at(idx), pascal_name);
+    str_copy(proc_extern_at(idx), extern_name);
+    proc_argc[idx] = argc;
+    proc_has_ret[idx] = has_ret;
+    proc_ret_type[idx] = ret_type;
+    proc_count = proc_count + 1;
+    return idx;
+}
+
+void register_system_unit(void) {
+    /* Standard functions (return values, used in expressions) */
+    /* NOTE: names are lowercase because lexer lowercases identifiers */
+    proc_add("abs", "_p24p_abs", 1, 1, TYPE_INTEGER);
+    proc_add("odd", "_p24p_odd", 1, 1, TYPE_BOOLEAN);
+    proc_add("ord", "_p24p_ord", 1, 1, TYPE_INTEGER);
+    proc_add("chr", "_p24p_chr", 1, 1, TYPE_INTEGER);
+    proc_add("succ", "_p24p_succ", 1, 1, TYPE_INTEGER);
+    proc_add("pred", "_p24p_pred", 1, 1, TYPE_INTEGER);
+    proc_add("sqr", "_p24p_sqr", 1, 1, TYPE_INTEGER);
+    proc_add("eof", "_p24p_eof", 0, 1, TYPE_BOOLEAN);
+    proc_add("eoln", "_p24p_eoln", 0, 1, TYPE_BOOLEAN);
+    /* Standard procedures (no return, used as statements) */
+    proc_add("readln", "_p24p_read_ln", 0, 0, 0);
+    proc_add("writechar", "_p24p_write_char", 1, 0, 0);
+}
+
+void register_hardware_unit(void) {
+    proc_add("setled", "_p24p_set_led", 1, 0, 0);
+    proc_add("readswitch", "_p24p_read_switch", 0, 1, TYPE_INTEGER);
+}
+
+/* --- Symbol table --- */
 
 int sym_lookup(char *name) {
     int i;
@@ -171,6 +236,15 @@ int parse_factor(void) {
     if (tok_type == TOK_IDENT) {
         str_copy(name, tok_lexeme);
         next_token();
+
+        /* Check if it's a function call */
+        idx = proc_lookup(name);
+        if (idx >= 0 && proc_has_ret[idx]) {
+            parse_proc_call(name);
+            return proc_ret_type[idx];
+        }
+
+        /* Variable or constant */
         idx = sym_lookup(name);
         if (idx < 0) {
             printf("error line %d: undeclared '%s'\n", tok_line, name);
@@ -505,35 +579,78 @@ void parse_writeln_stmt(void) {
     printf("    call _p24p_write_ln\n");
 }
 
+void parse_proc_call(char *name) {
+    int pidx;
+    int argc;
+
+    pidx = proc_lookup(name);
+    if (pidx < 0) {
+        printf("error line %d: unknown procedure '%s'\n", tok_line, name);
+        parse_error = 1;
+        return;
+    }
+
+    argc = 0;
+    if (tok_type == TOK_LPAREN) {
+        next_token();
+        if (tok_type != TOK_RPAREN) {
+            parse_expression();
+            argc = argc + 1;
+            while (tok_type == TOK_COMMA) {
+                next_token();
+                parse_expression();
+                argc = argc + 1;
+            }
+        }
+        expect(TOK_RPAREN);
+        if (parse_error) return;
+    }
+
+    if (argc != proc_argc[pidx]) {
+        printf("error line %d: wrong arg count for %s\n", tok_line, name);
+        parse_error = 1;
+        return;
+    }
+
+    printf("    call %s\n", proc_extern_at(pidx));
+}
+
 void parse_stmt(void) {
     char name[MAX_NAME];
     int idx;
     int etype;
+    int pidx;
 
     if (tok_type == TOK_IDENT) {
-        /* Assignment */
         str_copy(name, tok_lexeme);
         next_token();
-        expect(TOK_ASSIGN);
-        if (parse_error) return;
 
-        idx = sym_lookup(name);
-        if (idx < 0) {
-            printf("error line %d: undeclared '%s'\n", tok_line, name);
-            parse_error = 1;
-            return;
-        }
-        if (sym_kind[idx] != SYM_VAR) {
-            error("cannot assign to constant");
-            return;
-        }
+        if (tok_type == TOK_ASSIGN) {
+            /* Assignment */
+            next_token();
 
-        etype = parse_expression();
+            idx = sym_lookup(name);
+            if (idx < 0) {
+                printf("error line %d: undeclared '%s'\n", tok_line, name);
+                parse_error = 1;
+                return;
+            }
+            if (sym_kind[idx] != SYM_VAR) {
+                error("cannot assign to constant");
+                return;
+            }
 
-        if (sym_type_id[idx] != etype) {
-            error("type mismatch in assignment");
+            etype = parse_expression();
+
+            if (sym_type_id[idx] != etype) {
+                error("type mismatch in assignment");
+            }
+            printf("    storeg %s\n", sym_name_at(idx));
+
+        } else {
+            /* Procedure call */
+            parse_proc_call(name);
         }
-        printf("    storeg %s\n", sym_name_at(idx));
 
     } else if (tok_type == TOK_IF) {
         parse_if_stmt();
@@ -722,8 +839,61 @@ void parser_init(char *src, int len) {
     label_count = 0;
     parse_error = 0;
     str_count = 0;
+    proc_count = 0;
+    unit_hardware = 0;
+    register_system_unit();
     lexer_init(src, len);
     next_token(); /* prime the first token */
+}
+
+void parse_uses_clause(void) {
+    char unit_name[MAX_NAME];
+
+    next_token(); /* consume USES */
+
+    if (tok_type != TOK_IDENT) {
+        error("expected unit name after uses");
+        return;
+    }
+
+    while (1) {
+        str_copy(unit_name, tok_lexeme);
+        next_token();
+
+        /* Lexer lowercases identifiers */
+        if (strcmp(unit_name, "hardware") == 0) {
+            unit_hardware = 1;
+            register_hardware_unit();
+        } else {
+            printf("error line %d: unknown unit '%s'\n", tok_line, unit_name);
+            parse_error = 1;
+            return;
+        }
+
+        if (tok_type != TOK_COMMA) break;
+        next_token();
+        if (tok_type != TOK_IDENT) {
+            error("expected unit name after comma");
+            return;
+        }
+    }
+
+    expect(TOK_SEMI);
+}
+
+void emit_externs(void) {
+    int i;
+    /* Always emit the write/writeln externs (System builtins handled as keywords) */
+    printf(".extern _p24p_write_int\n");
+    printf(".extern _p24p_write_bool\n");
+    printf(".extern _p24p_write_str\n");
+    printf(".extern _p24p_write_ln\n");
+    /* Emit externs for all registered procedures */
+    i = 0;
+    while (i < proc_count) {
+        printf(".extern %s\n", proc_extern_at(i));
+        i = i + 1;
+    }
 }
 
 void parse_program(void) {
@@ -739,11 +909,14 @@ void parse_program(void) {
     expect(TOK_SEMI);
     if (parse_error) return;
 
+    /* Parse optional uses clause */
+    if (tok_type == TOK_USES) {
+        parse_uses_clause();
+        if (parse_error) return;
+    }
+
     printf(".module %s\n", prog_name);
-    printf(".extern _p24p_write_int\n");
-    printf(".extern _p24p_write_bool\n");
-    printf(".extern _p24p_write_str\n");
-    printf(".extern _p24p_write_ln\n");
+    emit_externs();
     printf(".export main\n");
     printf("; p24p output: %s\n", prog_name);
 

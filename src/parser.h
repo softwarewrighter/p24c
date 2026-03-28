@@ -34,6 +34,19 @@ char str_data[STR_DATA_SIZE];
 int str_len[MAX_STRINGS];
 int str_count;
 
+/* External procedure table */
+#define MAX_PROCS 32
+#define PROC_NAME_SIZE 1024
+char proc_pascal[PROC_NAME_SIZE];
+char proc_extern[PROC_NAME_SIZE];
+int proc_argc[MAX_PROCS];
+int proc_has_ret[MAX_PROCS];
+int proc_ret_type[MAX_PROCS];
+int proc_count;
+
+/* Unit flags */
+int unit_hardware;
+
 /* Error flag */
 int parse_error;
 
