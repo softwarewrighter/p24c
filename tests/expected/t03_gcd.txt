@@ -1,0 +1,2 @@
+Computing GCD of 48 and 18
+6

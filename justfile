@@ -44,5 +44,17 @@ build:
 run file:
     printf '%s\x04' "$(cat {{file}})" | cor24-run --run p24p.s --terminal --speed 0 --time 30
 
-# Run all tests
+# Run all unit tests (lexer, parser, codegen)
 test: test-lexer test-parser test-codegen test-lexer-phase1
+
+# Run end-to-end regression tests (compile + link + assemble + run, check expected output)
+test-e2e:
+    bash scripts/test-all.sh
+
+# Demo one Pascal program with full pipeline visibility
+demo file:
+    bash scripts/demo.sh {{file}}
+
+# Demo all Pascal programs
+demo-all:
+    bash scripts/demo-all.sh
