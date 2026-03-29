@@ -124,7 +124,8 @@ void register_system_unit(void) {
 }
 
 void register_hardware_unit(void) {
-    proc_add("setled", "_p24p_set_led", 1, 0, 0);
+    proc_add("ledon", "_p24p_led_on", 0, 0, 0);
+    proc_add("ledoff", "_p24p_led_off", 0, 0, 0);
     proc_add("readswitch", "_p24p_read_switch", 0, 1, TYPE_INTEGER);
 }
 

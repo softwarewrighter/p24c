@@ -55,7 +55,7 @@ for f in "$P24P_DIR"/tests/led_on.pas "$P24P_DIR"/tests/led_off.pas; do
   # Run with dump
   EXEC_OUTPUT=$(cor24-run --run "$PVM" \
     --load-binary "$TMP/$NAME.bin@0x010000" \
-    --load-binary "$TMP/code_ptr.bin@0x09DC" \
+    --load-binary "$TMP/code_ptr.bin@0x0A0F" \
     --dump --speed 0 -n 50000000 2>&1)
 
   INSTRS=$(echo "$EXEC_OUTPUT" | grep -oE 'Executed [0-9]+' | grep -oE '[0-9]+')
@@ -74,5 +74,5 @@ for f in "$P24P_DIR"/tests/led_on.pas "$P24P_DIR"/tests/led_off.pas; do
   echo ""
 done
 
-echo "NOTE: LED D2 is active-low. SetLED(0) = LED on, SetLED(1) = LED off."
-echo "NOTE: If both show same state, pvm.s sys 3 may write to wrong I/O address (REQ-026)."
+echo "NOTE: LED D2 is active-low (0x00 = on, 0x01 = off)."
+echo "NOTE: LedOn and LedOff should show different LED states."

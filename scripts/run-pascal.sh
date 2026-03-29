@@ -48,7 +48,7 @@ printf '\x00\x00\x01' > "$TMP/code_ptr.bin"
 # Step 6: Run on PVM
 cor24-run --run "$PVM" \
   --load-binary "$TMP/$NAME.bin@0x010000" \
-  --load-binary "$TMP/code_ptr.bin@0x09DC" \
+  --load-binary "$TMP/code_ptr.bin@0x0A0F" \
   --terminal --speed 0 -n "$MAX_INSTRS" 2>&1 | \
   grep -v '^\[' | grep -v '^Assembled' | grep -v '^Running' | \
   grep -v '^Executed' | grep -v '^Loaded' | grep -v '^PVM OK' | \

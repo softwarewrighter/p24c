@@ -71,7 +71,7 @@ for f in "$P24P_DIR"/tests/t*.pas "$P24P_DIR"/tests/hello*.pas "$P24P_DIR"/tests
   # Step 5: Execute
   EXEC_OUTPUT=$(cor24-run --run "$PVM" \
     --load-binary "$TMP/$NAME.bin@0x010000" \
-    --load-binary "$TMP/code_ptr.bin@0x09DC" \
+    --load-binary "$TMP/code_ptr.bin@0x0A0F" \
     --terminal --speed 0 -n 50000000 2>&1)
 
   ACTUAL=$(echo "$EXEC_OUTPUT" | grep -v '^\[' | grep -v '^Assembled' | grep -v '^Running' | \

@@ -1,6 +1,6 @@
 program Blink;
 uses Hardware;
 begin
-  SetLED(1);
+  LedOn;
   writeln('LED on')
 end.

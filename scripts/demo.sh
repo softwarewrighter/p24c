@@ -81,7 +81,7 @@ echo "--- Step 5: Execute on PVM (pvm.s + cor24-run) ---"
 printf '\x00\x00\x01' > "$TMP/code_ptr.bin"
 EXEC_OUTPUT=$(cor24-run --run "$PVM" \
   --load-binary "$TMP/$NAME.bin@0x010000" \
-  --load-binary "$TMP/code_ptr.bin@0x09DC" \
+  --load-binary "$TMP/code_ptr.bin@0x0A0F" \
   --terminal --speed 0 -n "$MAX_INSTRS" 2>&1)
 
 EXEC_INSTRS=$(echo "$EXEC_OUTPUT" | grep -oE 'Executed [0-9]+' | grep -oE '[0-9]+')
